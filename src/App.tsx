@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Compass,
+  Radar,
   Plus,
   Search,
   Sun,
@@ -11,13 +11,16 @@ import {
   Download,
   RotateCcw,
   MapPin,
+  LayoutGrid,
+  HelpCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { CampusMap } from './components/CampusMap';
 import { ItemCard } from './components/ItemCard';
 import { LoginScreen, SessionUser } from './components/LoginScreen';
 import { ReportModal } from './components/ReportModal';
 import { ClaimModal } from './components/ClaimModal';
-import { CAMPUS_ZONES, findSmartMatches, getZoneById } from './data/matcher';
+import { findSmartMatches, getZoneById } from './data/matcher';
 import {
   CATEGORIES,
   confirmHandover,
@@ -158,7 +161,7 @@ export default function App() {
     } catch {
       // ignore
     }
-    notify(`Signed in as ${user.name}`);
+    notify(`Welcome, ${user.name}`);
   };
 
   const handleLogout = () => {
@@ -234,8 +237,8 @@ export default function App() {
     pushAlert(`Claim on ${itemId} was ${decision.toLowerCase()} by ${session.name}.`);
     notify(
       decision === 'Approved'
-        ? `Claim approved! One-time handover code generated.`
-        : `Claim rejected.`
+        ? 'Claim approved! One-time handover code generated.'
+        : 'Claim rejected.'
     );
   };
 
@@ -272,257 +275,275 @@ export default function App() {
   const unreadCount = alerts.filter((a) => !a.read).length;
   const activeClaimItem = claimModal ? items.find((i) => i.id === claimModal.itemId) ?? null : null;
 
+  const navItems = [
+    { id: 'ALL' as const, label: 'Explore All', count: items.length, icon: LayoutGrid },
+    { id: 'LOST' as const, label: 'Lost Board', count: stats.openLost, icon: HelpCircle },
+    { id: 'FOUND' as const, label: 'Found Board', count: stats.openFound, icon: CheckCircle2 },
+    { id: 'MATCHES' as const, label: 'Smart Matches', count: stats.matches, icon: Sparkles },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-slate-900 text-white border-b-4 border-emerald-500 shadow-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-sm">
-              <Compass className="w-5 h-5 text-white" />
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#FAFAF9] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 bg-dot-grid transition-colors">
+      {/* Left Sidebar Rail (Desktop) / Compact Top Bar (Mobile) */}
+      <aside className="lg:w-72 lg:min-h-screen lg:sticky lg:top-0 lg:h-screen bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-zinc-800 p-4 lg:p-5 flex flex-col justify-between gap-5 z-30">
+        <div className="space-y-6">
+          {/* Brand + Mobile Quick Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
+                <Radar className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="font-display text-lg font-bold tracking-tight leading-none">UniFind</h1>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Campus Lost &amp; Found</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-extrabold text-lg tracking-tight leading-tight">UniFind</h1>
-              <p className="text-[11px] text-slate-300">University Lost &amp; Found · Muhammad Abdullahi Bukar</p>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setDarkMode((d) => !d)}
+                className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-indigo-600"
+                title="Toggle dark mode"
+              >
+                {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-rose-600"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-3 py-1.5 border border-slate-700 text-xs">
-              <span className="font-semibold">{session.name}</span>
-              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 font-bold">
-                {session.role}
-              </span>
-            </div>
-
+          {/* Primary Action Buttons */}
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setReportModalKind('LOST')}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white"
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm shadow-rose-600/20 transition"
             >
               <Plus className="w-3.5 h-3.5" /> Report Lost
             </button>
             <button
               onClick={() => setReportModalKind('FOUND')}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white"
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-sm shadow-teal-600/20 transition"
             >
               <Plus className="w-3.5 h-3.5" /> Report Found
             </button>
+          </div>
 
-            {session.role === 'SECURITY' && (
-              <>
+          {/* Sidebar Navigation */}
+          <nav className="flex lg:flex-col gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+            {navItems.map((nav) => {
+              const Icon = nav.icon;
+              const active = activeTab === nav.id;
+              return (
                 <button
-                  onClick={handleExportCsv}
-                  title="Export CSV Log"
-                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold"
+                  key={nav.id}
+                  onClick={() => setActiveTab(nav.id)}
+                  className={`shrink-0 flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                      : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
                 >
-                  <Download className="w-3.5 h-3.5" /> CSV
-                </button>
-                <button
-                  onClick={handleReset}
-                  title="Reset sample records (Security only)"
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              </>
-            )}
-
-            {/* Match & Claim Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setShowAlerts((v) => !v)}
-                className="relative p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700"
-                title="Match & Claim Notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
-                    {unreadCount}
+                  <span className="inline-flex items-center gap-2.5">
+                    <Icon className="w-4 h-4" />
+                    {nav.label}
                   </span>
-                )}
-              </button>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      active ? 'bg-white/20 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    {nav.count}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
 
-              {showAlerts && (
-                <div className="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-xs font-bold">Notifications</span>
-                    <button
-                      onClick={() => setAlerts((prev) => prev.map((a) => ({ ...a, read: true })))}
-                      className="text-[11px] font-semibold text-emerald-600 hover:underline"
-                    >
-                      Mark all read
-                    </button>
-                  </div>
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                    {alerts.map((a) => (
-                      <div key={a.id} className={`px-4 py-3 text-xs ${a.read ? 'opacity-65' : 'bg-emerald-50/50 dark:bg-emerald-950/30'}`}>
-                        <div className="font-medium leading-snug">{a.message}</div>
-                        <div className="text-[10px] text-slate-400 mt-1">{new Date(a.at).toLocaleString()}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {/* Compact Returned Counter Pill */}
+          <div className="hidden lg:block rounded-2xl bg-gradient-to-br from-indigo-50 to-teal-50 dark:from-indigo-950/40 dark:to-teal-950/30 border border-indigo-100 dark:border-indigo-900/50 p-4 space-y-1">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              Campus Recovery Rate
             </div>
-
-            <button
-              onClick={() => setDarkMode((d) => !d)}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700"
-              title="Toggle theme"
-            >
-              {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-sky-300" />}
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700"
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* KPI Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 border-l-4 border-l-rose-500">
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Open Lost Reports</div>
-            <div className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">{stats.openLost}</div>
-          </div>
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 border-l-4 border-l-emerald-500">
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Open Found Items</div>
-            <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{stats.openFound}</div>
-          </div>
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 border-l-4 border-l-violet-500">
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Smart Matches Found</div>
-            <div className="text-2xl font-extrabold text-violet-600 dark:text-violet-400 mt-1">{stats.matches}</div>
-          </div>
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 border-l-4 border-l-slate-700 dark:border-l-slate-400">
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">Successfully Returned</div>
-            <div className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{stats.returned}</div>
+            <div className="font-display text-2xl font-bold text-zinc-900 dark:text-white">
+              {stats.returned} Returned
+            </div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              {isCloudSyncEnabled ? 'Live Firebase Cloud Sync' : 'Demo Browser Storage'}
+            </div>
           </div>
         </div>
 
-        {/* Interactive Campus Map */}
+        {/* Bottom User Profile & Security Tools */}
+        <div className="hidden lg:block space-y-2.5 pt-4 border-t border-zinc-200/80 dark:border-zinc-800">
+          {session.role === 'SECURITY' && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleExportCsv}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-xs font-semibold"
+              >
+                <Download className="w-3.5 h-3.5" /> Export CSV
+              </button>
+              <button
+                onClick={handleReset}
+                title="Reset sample records"
+                className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-rose-600"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-zinc-100/80 dark:bg-zinc-800/70">
+            <div className="w-9 h-9 rounded-full bg-indigo-600 text-white font-display font-bold text-sm flex items-center justify-center shrink-0">
+              {session.name.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold truncate">{session.name}</div>
+              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                {session.role} {session.matricNumber ? `· ${session.matricNumber}` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Discovery Workspace */}
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full space-y-6">
+        {/* Top Floating Search & Notifications Strip */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-3.5" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search AirPods, matric card, Library, UF-205..."
+              className="w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800 rounded-full pl-11 pr-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Alerts Bell */}
+          <div className="relative">
+            <button
+              onClick={() => setShowAlerts((v) => !v)}
+              className="relative p-3 rounded-full bg-white/95 dark:bg-zinc-900/95 border border-zinc-200/80 dark:border-zinc-800 shadow-sm hover:border-indigo-400"
+              title="Match Notifications"
+            >
+              <Bell className="w-4 h-4 text-zinc-700 dark:text-zinc-200" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showAlerts && (
+              <div className="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden z-50">
+                <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <span className="text-xs font-bold">Smart Match Alerts</span>
+                  <button
+                    onClick={() => setAlerts((prev) => prev.map((a) => ({ ...a, read: true })))}
+                    className="text-[11px] font-semibold text-indigo-600 hover:underline"
+                  >
+                    Mark all read
+                  </button>
+                </div>
+                <div className="max-h-72 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {alerts.map((a) => (
+                    <div key={a.id} className={`px-4 py-3 text-xs ${a.read ? 'opacity-65' : 'bg-indigo-50/50 dark:bg-indigo-950/30'}`}>
+                      <div className="font-medium leading-snug">{a.message}</div>
+                      <div className="text-[10px] text-zinc-400 mt-1">{new Date(a.at).toLocaleString()}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Blueprint Campus Radar Map */}
         <CampusMap items={items} selectedZone={selectedZone} onSelectZone={setSelectedZone} />
 
-        {/* View Tabs & Filter Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1 gap-1">
-            {([
-              { id: 'ALL', label: 'All Items' },
-              { id: 'LOST', label: 'Lost' },
-              { id: 'FOUND', label: 'Found' },
-              { id: 'MATCHES', label: `Smart Matches (${smartMatches.length})` },
-            ] as const).map((tab) => (
+        {/* Horizontal Category Filter Pills */}
+        {activeTab !== 'MATCHES' && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => setCategoryFilter('ALL')}
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition ${
+                categoryFilter === 'ALL'
+                  ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-transparent'
+                  : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-indigo-400'
+              }`}
+            >
+              All Categories
+            </button>
+            {CATEGORIES.map((c) => (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                  activeTab === tab.id
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                key={c}
+                onClick={() => setCategoryFilter(c)}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition ${
+                  categoryFilter === c
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-indigo-400'
                 }`}
               >
-                {tab.label}
+                {c}
               </button>
             ))}
           </div>
-
-          <span className="text-xs text-slate-400">
-            {isCloudSyncEnabled ? 'Live Cloud Sync Active' : 'Demo Mode (Browser Storage)'}
-          </span>
-        </div>
-
-        {activeTab !== 'MATCHES' && (
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search item, brand, building, or ID (e.g. UF-205)..."
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <select
-              value={selectedZone}
-              onChange={(e) => setSelectedZone(e.target.value as CampusZoneId | 'ALL')}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold"
-            >
-              <option value="ALL">All Campus Zones</option>
-              {CAMPUS_ZONES.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold"
-            >
-              <option value="ALL">All Categories</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
 
-        {/* Smart Matches View */}
+        {/* Smart Matches or Pinboard Feed */}
         {activeTab === 'MATCHES' ? (
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {smartMatches.length === 0 ? (
-              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 p-10 text-center text-sm text-slate-500">
+              <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-dashed border-zinc-300 dark:border-zinc-700 p-10 text-center text-sm text-zinc-500">
                 No automatic matches above 45% right now. New reports are matched automatically.
               </div>
             ) : (
               smartMatches.map((m) => (
                 <div
                   key={`${m.lostItem.id}-${m.foundItem.id}`}
-                  className="rounded-2xl bg-white dark:bg-slate-900 border border-violet-200 dark:border-violet-900 p-5 space-y-3 shadow-sm"
+                  className="rounded-3xl bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-900 p-5 space-y-4 shadow-sm"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="inline-flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-600 text-white text-xs font-extrabold">
-                        <Sparkles className="w-3.5 h-3.5" /> {m.score}% Match Score
+                    <div className="inline-flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-extrabold">
+                        <Sparkles className="w-3.5 h-3.5" /> {m.score}% Match
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">{m.reasons.join(' · ')}</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">{m.reasons.join(' · ')}</span>
                     </div>
                     <button
                       onClick={() => setClaimModal({ mode: 'CLAIM', itemId: m.foundItem.id })}
-                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
+                      className="px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold"
                     >
-                      Claim Found Item ({m.foundItem.id})
+                      Claim {m.foundItem.id}
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 p-3.5">
-                      <div className="text-[11px] font-bold text-rose-700 dark:text-rose-300 uppercase">
-                        Lost Report · {m.lostItem.id}
+                    <div className="rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900 p-4">
+                      <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase">
+                        Lost · {m.lostItem.id}
                       </div>
-                      <div className="text-sm font-bold mt-0.5">{m.lostItem.title}</div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{m.lostItem.description}</p>
-                      <div className="text-[11px] text-slate-500 mt-2 inline-flex items-center gap-1">
+                      <div className="font-display text-sm font-bold mt-1">{m.lostItem.title}</div>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1">{m.lostItem.description}</p>
+                      <div className="text-[11px] text-zinc-500 mt-2 inline-flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {getZoneById(m.lostItem.zoneId).name} · {m.lostItem.dateOccurred}
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 p-3.5">
-                      <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">
-                        Found Report · {m.foundItem.id}
+                    <div className="rounded-2xl bg-teal-50/70 dark:bg-teal-950/20 border border-teal-200/80 dark:border-teal-900 p-4">
+                      <div className="text-[11px] font-bold text-teal-600 dark:text-teal-400 uppercase">
+                        Found · {m.foundItem.id}
                       </div>
-                      <div className="text-sm font-bold mt-0.5">{m.foundItem.title}</div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{m.foundItem.description}</p>
-                      <div className="text-[11px] text-slate-500 mt-2 inline-flex items-center gap-1">
+                      <div className="font-display text-sm font-bold mt-1">{m.foundItem.title}</div>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1">{m.foundItem.description}</p>
+                      <div className="text-[11px] text-zinc-500 mt-2 inline-flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {getZoneById(m.foundItem.zoneId).name} · {m.foundItem.dateOccurred}
                       </div>
                     </div>
@@ -532,7 +553,6 @@ export default function App() {
             )}
           </div>
         ) : (
-          /* Item Cards Grid */
           <div className="grid md:grid-cols-2 gap-4">
             {filteredItems.map((item) => (
               <ItemCard
@@ -546,7 +566,7 @@ export default function App() {
               />
             ))}
             {filteredItems.length === 0 && (
-              <div className="md:col-span-2 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 p-10 text-center text-sm text-slate-500">
+              <div className="md:col-span-2 rounded-3xl bg-white dark:bg-zinc-900 border border-dashed border-zinc-300 dark:border-zinc-700 p-10 text-center text-sm text-zinc-500">
                 No lost or found reports match your current filters.
               </div>
             )}
@@ -575,7 +595,7 @@ export default function App() {
       )}
 
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold shadow-xl border border-emerald-500/40">
+        <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-full bg-zinc-900 text-white text-xs font-semibold shadow-xl border border-indigo-500/40">
           {toast}
         </div>
       )}
