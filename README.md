@@ -2,6 +2,8 @@
 
 Built by **Muhammad Abdullahi Bukar**.
 
+**Live App:** https://uni-find-lost-and-found.vercel.app
+
 Every semester on campus, students lose airpods, matric cards, water flasks, calculators, and hostel keys - and end up posting in five different WhatsApp groups hoping someone saw them. **UniFind** brings everything into one central campus hub with an interactive campus map, automatic Lost-to-Found matching, and a verification flow that stops false claims.
 
 ## Key Features
