@@ -7,7 +7,7 @@ import {
   Moon,
   Bell,
   LogOut,
-  Sparkles,
+  Link2,
   Download,
   RotateCcw,
   MapPin,
@@ -279,7 +279,7 @@ export default function App() {
     { id: 'ALL' as const, label: 'Explore All', count: items.length, icon: LayoutGrid },
     { id: 'LOST' as const, label: 'Lost Board', count: stats.openLost, icon: HelpCircle },
     { id: 'FOUND' as const, label: 'Found Board', count: stats.openFound, icon: CheckCircle2 },
-    { id: 'MATCHES' as const, label: 'Smart Matches', count: stats.matches, icon: Sparkles },
+    { id: 'MATCHES' as const, label: 'Possible Matches', count: stats.matches, icon: Link2 },
   ];
 
   return (
@@ -513,7 +513,7 @@ export default function App() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="inline-flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-extrabold">
-                        <Sparkles className="w-3.5 h-3.5" /> {m.score}% Match
+                        <Link2 className="w-3.5 h-3.5" /> {m.score}% Match
                       </span>
                       <span className="text-xs text-zinc-500 dark:text-zinc-400">{m.reasons.join(' · ')}</span>
                     </div>

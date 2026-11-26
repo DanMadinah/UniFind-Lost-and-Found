@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   AlertCircle,
   Hash,
-  Sparkles,
+  Link2,
   MapPin,
   KeyRound,
 } from 'lucide-react';
@@ -118,7 +118,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
         <div className="relative z-10 my-10 space-y-6 max-w-lg">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" /> Smart Match + Campus Radar
+            <Link2 className="w-3.5 h-3.5" /> Auto-Match + Campus Radar
           </span>
           <h1 className="font-display text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight">
             Lost it on campus? Let the campus find it.

@@ -1,4 +1,4 @@
-import { MapPin, Calendar, ShieldCheck, KeyRound, CheckCircle2, Sparkles, Tag } from 'lucide-react';
+import { MapPin, Calendar, ShieldCheck, KeyRound, CheckCircle2, Link2, Tag } from 'lucide-react';
 import { getZoneById } from '../data/matcher';
 import { LostFoundItem, UserRole } from '../types';
 
@@ -47,7 +47,7 @@ export function ItemCard({
             </span>
             {matchScore !== undefined && matchScore >= 45 && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-600/90 text-white backdrop-blur-md">
-                <Sparkles className="w-3 h-3" /> {matchScore}% Match
+                <Link2 className="w-3 h-3" /> {matchScore}% Match
               </span>
             )}
           </div>
@@ -78,7 +78,7 @@ export function ItemCard({
             </span>
             {matchScore !== undefined && matchScore >= 45 && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                <Sparkles className="w-3 h-3" /> {matchScore}%
+                <Link2 className="w-3 h-3" /> {matchScore}%
               </span>
             )}
           </div>
